@@ -36,7 +36,7 @@ jobs:
 
       - name: Build with PyInstaller
         run: |
-          pyinstaller --noconsole --onefile --hidden-import=matplotlib.backends.backend_tkagg --hidden-import=plyer.platforms.win.notification --name "${{ matrix.output_name }}" app.py
+          pyinstaller --noconsole --onefile --hidden-import=matplotlib.backends.backend_tkagg --hidden-import=plyer.platforms.win.notification --name "${{ matrix.output_name }}" main.py
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
