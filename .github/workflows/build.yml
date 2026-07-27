@@ -4,22 +4,14 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
-  build:
-    name: Build for ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    
-    strategy:
-      matrix:
-        include:
-          - os: windows-latest
-            output_name: FlowTracker-Windows.exe
-          - os: macos-latest
-            output_name: FlowTracker-Mac
-          - os: ubuntu-latest
-            output_name: FlowTracker-Linux
-
+  build-windows:
+    name: Build Windows release
+    runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -36,27 +28,19 @@ jobs:
 
       - name: Build with PyInstaller
         run: |
-          pyinstaller --noconsole --onefile --hidden-import=matplotlib.backends.backend_tkagg --hidden-import=plyer.platforms.win.notification --name "${{ matrix.output_name }}" main.py
+          pyinstaller --noconsole --onefile --hidden-import=matplotlib.backends.backend_tkagg --hidden-import=plyer.platforms.win.notification --name FlowTracker main.py
+
+      - name: Rename release binary
+        run: |
+          Copy-Item dist\FlowTracker.exe dist\FlowTracker-Windows.exe
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: artifact-${{ matrix.os }}
-          path: dist/${{ matrix.output_name }}
+          name: flowtracker-windows
+          path: dist/FlowTracker-Windows.exe
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: dist-artifacts
-          merge-multiple: true
-
-      - name: Upload binaries to release
+      - name: Upload release asset
         uses: softprops/action-gh-release@v2
         with:
-          files: dist-artifacts/*
+          files: dist/FlowTracker-Windows.exe
