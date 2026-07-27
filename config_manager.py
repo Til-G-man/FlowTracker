@@ -1,6 +1,9 @@
 import os
 import json
 
+lern_erinnerung_minuten = 25
+pausenbenachrichtigung = True
+aktivitaetentracker = False
 # Fester Pfad im Benutzerverzeichnis (unabhängig davon, wo die .exe liegt!)
 # Entspricht z.B. C:\Users\DeinName\FlowTrackerData unter Windows
 BASE_DIR = os.path.join(os.path.expanduser("~"), "FlowTrackerData")
@@ -24,8 +27,8 @@ def init_projekt():
     # 2. Standard-Textdateien mit Startwerten füllen, falls sie neu sind
     standard_aktivitaeten = "Productivity\nBreak\nLunch\n"
     standard_vorlagen = "Deep Work\nCoding Session\nExam Prep\n"
-    standard_faecher = "Math\nProgramming\nPhysics\n"
-    standard_events = "Coffee Break\nDistraction\nPhone Call\n"
+    standard_faecher = "vocabulary\nBiology\Materials\nFEA"
+    standard_events = "Cofein\nstretch\nWalk\n"
 
     dateien_standards = [
         (DATEI_AKT_LISTE, standard_aktivitaeten),
@@ -42,9 +45,9 @@ def init_projekt():
     # 3. Einstellungen initialisieren, falls nicht vorhanden
     if not os.path.exists(DATEI_EINSTELLUNGEN):
         standard_einstellungen = {
-            "lern_erinnerung_minuten": 45,
-            "pausenbenachrichtigung": True,
-            "aktivitaetentracker": True
+            "lern_erinnerung_minuten": lern_erinnerung_minuten,
+            "pausenbenachrichtigung": pausenbenachrichtigung,
+            "aktivitaetentracker": aktivitaetentracker
         }
         speichere_einstellungen(standard_einstellungen)
 
@@ -56,9 +59,9 @@ def lade_einstellungen():
         except:
             pass
     return {
-        "lern_erinnerung_minuten": 25,
-        "pausenbenachrichtigung": True,
-        "aktivitaetentracker": False
+        "lern_erinnerung_minuten": lern_erinnerung_minuten,
+        "pausenbenachrichtigung": pausenbenachrichtigung,
+        "aktivitaetentracker": aktivitaetentracker
     }
 
 def speichere_einstellungen(einstellungen):

@@ -81,9 +81,17 @@ class FlowTrackerApp:
                   command=lambda: self.zeige_frame(self.settings_frame)).pack(pady=10)
 
     def erstelle_settings_ui(self):
-        tk.Label(self.settings_frame, text="Settings", font=("Helvetica", 20, "bold")).pack(pady=10)
+        for w in self.settings_frame.winfo_children(): w.destroy()
+        
+        # --- Top Header with Back Button (Top Left) ---
+        top_header = tk.Frame(self.settings_frame)
+        top_header.pack(fill=tk.X, pady=(0, 5))
+        
+        tk.Button(top_header, text="⬅ Back", command=lambda: self.zeige_frame(self.home_frame), width=8, font=("Helvetica", 9), bg="lightgray").pack(side=tk.LEFT)
+        tk.Label(top_header, text="Settings", font=("Helvetica", 14, "bold")).pack(side=tk.LEFT, padx=10)
+        
         nb = ttk.Notebook(self.settings_frame)
-        nb.pack(expand=True, fill=tk.BOTH, pady=10)
+        nb.pack(expand=True, fill=tk.BOTH, pady=5)
         
         t1, t2, t3, t4, t5 = tk.Frame(nb), tk.Frame(nb), tk.Frame(nb), tk.Frame(nb), tk.Frame(nb)
         nb.add(t1, text="General")
@@ -94,7 +102,6 @@ class FlowTrackerApp:
         
         self.setting_widgets = {}
         
-        # Mapping für englische Beschriftungen der Einstellungen
         setting_labels = {
             "lern_erinnerung_minuten": "Break Reminder Minutes",
             "pausenbenachrichtigung": "Break Notification",
@@ -114,7 +121,6 @@ class FlowTrackerApp:
                 cb.pack(side=tk.TOP, anchor="w")
                 self.setting_widgets[k] = cb
                 
-                # Klein dazuschreiben, was der Aktivitätentracker trackt
                 if k == "aktivitaetentracker":
                     tk.Label(right_frame, text="Tracks active windows & application titles", font=("Helvetica", 8), fg="gray").pack(side=tk.TOP, anchor="w", pady=(2, 0))
             else:
@@ -129,8 +135,6 @@ class FlowTrackerApp:
         self.baue_listen_manager(t3, cm.DATEI_VORLAGEN)
         self.baue_listen_manager(t4, cm.DATEI_FAECHER)
         self.baue_listen_manager(t5, cm.DATEI_EVENTS)
-        
-        tk.Button(self.settings_frame, text="⬅ Back", command=lambda: self.zeige_frame(self.home_frame)).pack()
 
     def speichere_vars(self):
         neue_einstellungen = {}
@@ -395,12 +399,19 @@ class FlowTrackerApp:
         self._bind_mousewheel(self.chart_container, self.canvas_charts)
 
     def erstelle_kommentar_ui(self):
-        tk.Label(self.kommentar_frame, text="New Session", font=("Helvetica", 14, "bold")).pack(pady=20)
-        tk.Label(self.kommentar_frame, text="Choose or enter session comment:").pack()
+        for w in self.kommentar_frame.winfo_children(): w.destroy()
+        
+        # --- Top Header with Back Button (Top Left) ---
+        top_header = tk.Frame(self.kommentar_frame)
+        top_header.pack(fill=tk.X, pady=(0, 20))
+        
+        tk.Button(top_header, text="⬅ Back", command=lambda: self.zeige_frame(self.home_frame), width=8, font=("Helvetica", 9), bg="lightgray").pack(side=tk.LEFT)
+        tk.Label(top_header, text="New Session", font=("Helvetica", 14, "bold")).pack(side=tk.LEFT, padx=10)
+        
+        tk.Label(self.kommentar_frame, text="Choose or enter session comment:", font=("Helvetica", 10)).pack(pady=5)
         self.entry_kommentar = ttk.Combobox(self.kommentar_frame, font=("Helvetica", 12), width=30)
         self.entry_kommentar.pack(pady=10)
-        tk.Button(self.kommentar_frame, text="🚀 Start", command=self.starte_session).pack(pady=20)
-        tk.Button(self.kommentar_frame, text="Cancel", command=lambda: self.zeige_frame(self.home_frame)).pack()
+        tk.Button(self.kommentar_frame, text="🚀 Start", font=("Helvetica", 12), bg="lightgreen", width=15, height=2, command=self.starte_session).pack(pady=20)
 
     def starte_session(self):
         kommentar = self.entry_kommentar.get().strip() or "No comment"
@@ -412,9 +423,16 @@ class FlowTrackerApp:
     def erstelle_haupt_ui(self):
         for w in self.haupt_frame.winfo_children(): w.destroy()
         
-        self.lbl_status = tk.Label(self.haupt_frame, text="...", font=("Helvetica", 12)); self.lbl_status.pack()
-        self.lbl_timer = tk.Label(self.haupt_frame, text="00:00", font=("Helvetica", 48, "bold")); self.lbl_timer.pack()
-        self.lbl_msg = tk.Label(self.haupt_frame, text="", fg="red"); self.lbl_msg.pack()
+        # --- Top Header with Back Button (Top Left) ---
+        top_header = tk.Frame(self.haupt_frame)
+        top_header.pack(fill=tk.X, pady=(0, 10))
+        
+        tk.Button(top_header, text="⬅ Back", command=self.session_beenden, width=8, font=("Helvetica", 9), bg="lightgray").pack(side=tk.LEFT)
+        tk.Label(top_header, text="Active Session", font=("Helvetica", 14, "bold")).pack(side=tk.LEFT, padx=10)
+        
+        self.lbl_status = tk.Label(self.haupt_frame, text="...", font=("Helvetica", 12)); self.lbl_status.pack(pady=5)
+        self.lbl_timer = tk.Label(self.haupt_frame, text="00:00", font=("Helvetica", 48, "bold")); self.lbl_timer.pack(pady=5)
+        self.lbl_msg = tk.Label(self.haupt_frame, text="", fg="red"); self.lbl_msg.pack(pady=2)
         
         bf = tk.Frame(self.haupt_frame); bf.pack(pady=10)
         self.buttons = {}
@@ -436,8 +454,6 @@ class FlowTrackerApp:
             self.cbox_events.current(0)
             
         tk.Button(sub_event_frame, text="Log Event 📌", command=self.logge_event, font=("Helvetica", 10), bg="lightyellow").pack(side=tk.LEFT)
-
-        tk.Button(self.haupt_frame, text="⏹ End Session", fg="red", command=self.session_beenden).pack(pady=10)
 
     def logge_event(self):
         event_name = self.cbox_events.get().strip()
@@ -511,20 +527,27 @@ class FlowTrackerApp:
 
     def aktualisiere_timer(self):
         if not self.timer_laeuft: return
-        gesamt_sek = int(time.time() - self.aktivitaet_startzeit)
-        mins = gesamt_sek // 60
-        secs = gesamt_sek % 60
-        self.lbl_timer.config(text=f"{mins:02d}:{secs:02d}")
-        
-        if self.aktuelle_aktivitaet and "productivity" in self.aktuelle_aktivitaet.lower() and mins >= self.einstellungen["lern_erinnerung_minuten"] and not self.erinnerung_gesendet:
-            if self.einstellungen.get("pausenbenachrichtigung", True):
-                self.lbl_msg.config(text="⏰ Time for a break!")
-                if PLYER_INSTALLIERT: notification.notify(title="Flow Tracker", message="Time for a break!", timeout=10)
-            self.erinnerung_gesendet = True
+        try:
+            gesamt_sek = int(time.time() - self.aktivitaet_startzeit)
+            mins = gesamt_sek // 60
+            secs = gesamt_sek % 60
+            self.lbl_timer.config(text=f"{mins:02d}:{secs:02d}")
             
-        if self.einstellungen.get("aktivitaetentracker", True):
-            p, t = utils.hole_aktives_fenster_info()
-            self.fenster_zeiten[(p, t)] = self.fenster_zeiten.get((p, t), 0) + 1
+            if self.aktuelle_aktivitaet and "productivity" in self.aktuelle_aktivitaet.lower() and mins >= self.einstellungen["lern_erinnerung_minuten"] and not self.erinnerung_gesendet:
+                if self.einstellungen.get("pausenbenachrichtigung", True):
+                    self.lbl_msg.config(text="⏰ Time for a break!")
+                    if PLYER_INSTALLIERT:
+                        try:
+                            notification.notify(title="Flow Tracker", message="Time for a break!", timeout=10)
+                        except Exception:
+                            pass
+                self.erinnerung_gesendet = True
+                
+            if self.einstellungen.get("aktivitaetentracker", True):
+                p, t = utils.hole_aktives_fenster_info()
+                self.fenster_zeiten[(p, t)] = self.fenster_zeiten.get((p, t), 0) + 1
+        except Exception:
+            pass
             
         self.root.after(1000, self.aktualisiere_timer)
 
