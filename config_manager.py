@@ -1,84 +1,66 @@
-import json
 import os
-import csv
+import json
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-CONFIG_DIR = os.path.join(DATA_DIR, "config")
-LOGS_DIR = os.path.join(DATA_DIR, "logs")
+# Fester Pfad im Benutzerverzeichnis (unabhängig davon, wo die .exe liegt!)
+# Entspricht z.B. C:\Users\DeinName\FlowTrackerData unter Windows
+BASE_DIR = os.path.join(os.path.expanduser("~"), "FlowTrackerData")
 
-DATEI_KOMMENTARE = os.path.join(LOGS_DIR, "session_kommentare.csv")
-DATEI_AKTIVITAETEN = os.path.join(LOGS_DIR, "session_aktivitaeten.csv")
-DATEI_FENSTER = os.path.join(LOGS_DIR, "session_fenster.csv")
-DATEI_EVENT_LOGS = os.path.join(LOGS_DIR, "session_events.csv")
-
-DATEI_AKT_LISTE = os.path.join(CONFIG_DIR, "meine_aktivitaeten.txt")
-DATEI_VORLAGEN = os.path.join(CONFIG_DIR, "meine_vorlagen.txt")
-DATEI_CONFIG = os.path.join(CONFIG_DIR, "einstellungen.json")
-DATEI_FAECHER = os.path.join(CONFIG_DIR, "faecher.txt")
-DATEI_EVENTS = os.path.join(CONFIG_DIR, "events.txt")
+# Alle Dateien werden fest mit diesem Ordner verknüpft
+DATEI_EINSTELLUNGEN = os.path.join(BASE_DIR, "einstellungen.json")
+DATEI_KOMMENTARE = os.path.join(BASE_DIR, "kommentare.csv")
+DATEI_AKTIVITAETEN = os.path.join(BASE_DIR, "aktivitaeten.csv")
+DATEI_FENSTER = os.path.join(BASE_DIR, "fenster.csv")
+DATEI_AKT_LISTE = os.path.join(BASE_DIR, "aktivitaeten_liste.txt")
+DATEI_VORLAGEN = os.path.join(BASE_DIR, "vorlagen.txt")
+DATEI_FAECHER = os.path.join(BASE_DIR, "faecher.txt")
+DATEI_EVENTS = os.path.join(BASE_DIR, "events.txt")
+DATEI_EVENT_LOGS = os.path.join(BASE_DIR, "event_logs.csv")
 
 def init_projekt():
-    if not os.path.exists(CONFIG_DIR): os.makedirs(CONFIG_DIR)
-    if not os.path.exists(LOGS_DIR): os.makedirs(LOGS_DIR)
+    # 1. Prüfen und Erstellen des Hauptordners, falls er nicht existiert
+    if not os.path.exists(BASE_DIR):
+        os.makedirs(BASE_DIR)
 
-    standard = {
-        "lern_erinnerung_minuten": 25, 
-        "eye_tracking_aktiv": False,
-        "blick_warnung_aktiv": False
-    }
+    # 2. Standard-Textdateien mit Startwerten füllen, falls sie neu sind
+    standard_aktivitaeten = "Productivity\nBreak\nLunch\n"
+    standard_vorlagen = "Deep Work\nCoding Session\nExam Prep\n"
+    standard_faecher = "Math\nProgramming\nPhysics\n"
+    standard_events = "Coffee Break\nDistraction\nPhone Call\n"
 
-    if not os.path.exists(DATEI_CONFIG):
-        with open(DATEI_CONFIG, "w", encoding="utf-8") as f:
-            json.dump(standard, f, indent=4)
-    
-    # Feste Standard-Aktivitäten auf Englisch
-    if not os.path.exists(DATEI_AKT_LISTE):
-        with open(DATEI_AKT_LISTE, "w", encoding="utf-8") as f:
-            f.write("Productivity\nBreak\nLunch\nOther\nAdmin")
-            
-    if not os.path.exists(DATEI_VORLAGEN):
-        with open(DATEI_VORLAGEN, "w", encoding="utf-8") as f:
-            f.write("Exam preparation\nHomework\nVocabulary learning\nProject work")
-            
-    if not os.path.exists(DATEI_FAECHER):
-        with open(DATEI_FAECHER, "w", encoding="utf-8") as f:
-            f.write("Math\nGerman\nEnglish\nComputer Science")
+    dateien_standards = [
+        (DATEI_AKT_LISTE, standard_aktivitaeten),
+        (DATEI_VORLAGEN, standard_vorlagen),
+        (DATEI_FAECHER, standard_faecher),
+        (DATEI_EVENTS, standard_events)
+    ]
 
-    if not os.path.exists(DATEI_EVENTS):
-        with open(DATEI_EVENTS, "w", encoding="utf-8") as f:
-            f.write("Distraction\nFetched coffee\nWrote down question\nSearched material")
+    for dateipfad, inhalt in dateien_standards:
+        if not os.path.exists(dateipfad):
+            with open(dateipfad, "w", encoding="utf-8") as f:
+                f.write(inhalt)
 
-    if not os.path.exists(DATEI_EVENT_LOGS):
-        with open(DATEI_EVENT_LOGS, "w", newline="", encoding="utf-8") as f:
-            writer = csv.writer(f)
-            writer.writerow(["Session_ID", "Activity", "Event", "Timestamp"])
+    # 3. Einstellungen initialisieren, falls nicht vorhanden
+    if not os.path.exists(DATEI_EINSTELLUNGEN):
+        standard_einstellungen = {
+            "lern_erinnerung_minuten": 45,
+            "pausenbenachrichtigung": True,
+            "aktivitaetentracker": True
+        }
+        speichere_einstellungen(standard_einstellungen)
 
 def lade_einstellungen():
-    standard = {
-        "lern_erinnerung_minuten": 25, 
-        "eye_tracking_aktiv": False, 
-        "blick_warnung_aktiv": False
+    if os.path.exists(DATEI_EINSTELLUNGEN):
+        try:
+            with open(DATEI_EINSTELLUNGEN, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            pass
+    return {
+        "lern_erinnerung_minuten": 25,
+        "pausenbenachrichtigung": True,
+        "aktivitaetentracker": False
     }
-    try:
-        with open(DATEI_CONFIG, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            if not isinstance(data, dict): raise ValueError
-            
-            # Alte Score-Einträge bereinigen, falls vorhanden
-            geaendert = False
-            for alter_schluessel in ["score_min", "score_max"]:
-                if alter_schluessel in data:
-                    del data[alter_schluessel]
-                    geaendert = True
-            if geaendert:
-                speichere_einstellungen(data)
-                
-            return data
-    except:
-        speichere_einstellungen(standard)
-        return standard
 
-def speichere_einstellungen(data):
-    with open(DATEI_CONFIG, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
+def speichere_einstellungen(einstellungen):
+    with open(DATEI_EINSTELLUNGEN, "w", encoding="utf-8") as f:
+        json.dump(einstellungen, f, indent=4)
